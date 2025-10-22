@@ -1,0 +1,18 @@
+{
+  "name": "yaintra",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@faker-js/faker": "^9.9.0",
+    "cypress": "^14.5.1",
+    "cypress-xpath": "^2.0.1",
+    "dotenv": "^17.2.0"
+  }
+}
