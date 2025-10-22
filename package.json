@@ -14,5 +14,8 @@
     "cypress": "^14.5.1",
     "cypress-xpath": "^2.0.1",
     "dotenv": "^17.2.0"
+  },
+  "dependencies": {
+    "open": "^10.2.0"
   }
 }

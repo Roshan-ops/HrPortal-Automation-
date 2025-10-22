@@ -3,74 +3,83 @@ import HrOnboardingPage from '../../pageObjects/HrOnboardingPage';
 import { faker } from '@faker-js/faker';
 
 describe('Employee Onboarding with Random Valid Data', () => {
-  const loginPage = new HrLoginPage();
-  const onboardingPage = new HrOnboardingPage();
+  const loginPage = new HrLoginPage();
+  const onboardingPage = new HrOnboardingPage();
 
-  const random = (list) => list[Math.floor(Math.random() * list.length)];
+  const random = (list) => list[Math.floor(Math.random() * list.length)];
 
-  // Dropdown Options
-  const titleOptions = ['Mr.', 'Mrs.', 'Ms.'];
-  const genderOptions = ['Male', 'Female', 'Other'];
-  const systemRoleOptions = ['fulltime', 'parttime', 'contract'];
-  const departmentOptions = [
-    'Artificial Intelligence',
-    'QUALITY ANALYST',
-    'BACK-END',
-    'FRONT-END',
-    'DESIGN',
-    'BUSINESS ANALYST',
-    'MANAGER',
-    'HUMAN RESOURCE'
-  ];
-  const workShiftOptions = ['Day shift', 'Morning shift', 'First shift'];
-  const designationOptions = ['Senior', 'Mid', 'Junior', 'Trainee', 'Intern'];
-  const supervisorOptions = ['Vertex HR'];
+  // Helper function to format Date object into MM/DD/YYYY string
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
 
-  const workEmail = faker.internet.email('qauser');
-  const firstName = faker.person.firstName();
-  const lastName = faker.person.lastName();
-  const phone = faker.phone.number('98########');
-  const personalEmail = faker.internet.email(firstName);
-  const dob = faker.date
-    .birthdate({ min: 22, max: 40, mode: 'age' })
-    .toISOString()
-    .split('T')[0];
-  const joinDate = new Date().toISOString().split('T')[0];
+  // Dropdown Options
+  const titleOptions = ['Mr.', 'Mrs.', 'Ms.'];
+  const genderOptions = ['Male', 'Female', 'Other'];
+  const employmentStatusOptions = ['FullTime', 'PartTime', 'Contract'];
+  const departmentOptions = [
+   'Quality Assurance',
+    'Manager',
+    'Design',
+    'Artificial Intelligence',
+    'Front-End',
+    'Human Resource',
+    'Backend', // Corrected to match UI button text
+  ];
+  const workShiftOptions = ['Day shift', 'Morning shift', 'First shift'];
+  const designationOptions = ['Senior', 'Mid', 'Junior', 'Trainee', 'Intern'];
+  const supervisorOptions = ['Vertex HR'];
+  
+  const firstName = faker.person.firstName();
+  const lastName = faker.person.lastName();
+  const emailPrefix = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${faker.string.numeric(4)}`;
+  const workEmail = `${emailPrefix}@yopmail.com`;
+  
+  const phone = faker.phone.number('98########');
+  const personalEmail = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${faker.string.numeric(2)}@yopmail.com`;
 
-  before(() => {
-    loginPage.login(Cypress.env('HR_EMAIL'), Cypress.env('HR_PASSWORD'));
-  });
+  // Date Generation - NOW IN MM/DD/YYYY FORMAT
+  const dobDate = faker.date.birthdate({ min: 22, max: 40, mode: 'age' });
+  const dob = formatDate(dobDate); // e.g., 10/23/2000
+  
+  const joinDate = formatDate(new Date()); // Today's date in MM/DD/YYYY format
 
-  it('should onboard a new employee from CoreHR → User Management → Profile setup', () => {
-    onboardingPage.navigateToUserManagement();
-    onboardingPage.clickAddNewUser();
-    onboardingPage.enterWorkEmail(workEmail);
+  before(() => {
+    loginPage.login(Cypress.env('HR_EMAIL'), Cypress.env('HR_PASSWORD'));
+  });
 
-    // 🔹 Pick random system role and department
-    const selectedRole = random(systemRoleOptions);
-    const selectedDepartment = random(departmentOptions);
+  it('should onboard a new employee from CoreHR → User Management → Profile setup', () => {
+    onboardingPage.navigateToUserManagement();
+    onboardingPage.clickProfiles();
+    onboardingPage.clickAddNewUser();
+    onboardingPage.enterWorkEmail(workEmail);
 
-    onboardingPage.selectSystemRole(selectedRole);
-    onboardingPage.selectDepartment(selectedDepartment);
-    onboardingPage.clickNext(); // move to profile form
+    // 🔹 Pick random employment status and department
+    onboardingPage.selectEmploymentStatus(random(employmentStatusOptions));
+    onboardingPage.selectDepartment(random(departmentOptions));
+//     onboardingPage.clickNext(); // move to profile form
 
-    onboardingPage.fillProfile({
-      supervisortitle: random(titleOptions),
-      gender: random(genderOptions),
-      dob,
-      joinDate,
-      systemRole: 'Employee', // fixed in profile
-      workShift: random(workShiftOptions),
-      designation: random(designationOptions),
-      supervisor: random(supervisorOptions),
-      firstName,
-      lastName,
-      phone,
-      personalEmail
-    });
+    onboardingPage.fillProfile({
+      salutationtitle: random(titleOptions),
+      gender: random(genderOptions),
+      dob,
+      joinDate,
+      systemRole: 'Employee', // fixed in profile
+      workShift: random(workShiftOptions),
+      designation: random(designationOptions),
+      supervisor: random(supervisorOptions),
+      firstName,
+      lastName,
+      phone,
+      personalEmail
+    });
 
-    onboardingPage.submit();
+    onboardingPage.submit();
 
-    cy.contains('Employee onboarded successfully').should('exist');
-  });
+    cy.contains('Employee onboarded successfully').should('exist');
+  });
 });
