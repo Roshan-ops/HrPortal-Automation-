@@ -93,10 +93,10 @@ class HrOnboardingPage {
     this.selectCustomDropdown('#supervisorId', supervisor);
     
     // Basic Text Inputs
-    cy.get('#first-name').should('be.visible').type(firstName);
-    cy.get('#last-name').should('be.visible').type(lastName);
-    cy.get('#phone').should('be.visible').type(phone);
-    cy.get('#personal-email').should('be.visible').type(personalEmail);
+    cy.xpath("//input[@formcontrolname='firstName']").should('exist').type(firstName);
+    cy.xpath("//input[@formcontrolname='lastName']").should('exist').type(lastName);
+    cy.get('#phoneNumber').should('exist').type(phone);
+    cy.xpath("//input[@formcontrolname='personalEmail']").should('exist').type(personalEmail);
   }
 
   // Submits the form
