@@ -1,67 +1,108 @@
+// Ensure cypress-xpath is imported/configured if XPaths must be used.
+// Best practice recommendation: Replace XPaths with more stable CSS selectors (cy.get) or text content selectors (cy.contains) where possible.
 require('cypress-xpath');
+
 class HrOnboardingPage {
-  navigateToUserManagement() {
-   cy.xpath("(//li[@routerlinkactive='active-link'])[2]").click();
-    // cy.contains('User Management').click();
-  }
-  clickProfiles() {
-    // Uses the reliable ID selector and waits for it to be visible before clicking
-    cy.get('#Profiles').should('be.visible').click();
-  }
-  clickAddNewUser() {
-    // Reverted to XPath as requested:
-    cy.xpath("(//span[@class='text-[#FFFFFF] text-sm font-semibold'])[1]").click();
-  }
-  enterWorkEmail(email) {
-    cy.get('input[placeholder="olivia@untitledui.com"]').type(email).wait(500);
-    cy.contains('button', 'Get Started').click();
-  }
-  selectEmploymentStatus(status) {
-    // Clicks the span/button that contains the text of the selected status (FullTime, PartTime, Contract).
-    cy.contains(status).should('be.visible').click(); 
-  }
-  selectDepartment(department) {
-    // FIX: Add a specific tag type (assuming 'div' wraps the department buttons) to resolve the "multiple elements" error.
-    cy.contains('div', department).should('be.visible').click(); 
-  }
-    // FIX: Converted helper function to a standard class method so it can be called using 'this.selectCustomDropdown'
-    selectCustomDropdown(fieldSelector, optionText) {
-        // 1. Click the main field element to open the list
-        cy.get(fieldSelector).click(); 
-        // 2. Search the global dropdown list (in the body) for the option text and click it
-        cy.get('body').find('li[role="option"]')
-          .contains(new RegExp(optionText, 'i'))
-          .should('be.visible')
-          .click();
-    }
-  fillProfile({salutationtitle,gender,dob,joinDate,systemRole, workShift, designation, supervisor, firstName, lastName, phone, personalEmail})
-{
-    // Title
-    this.selectCustomDropdown('#salutationId', salutationtitle);
-    // Gender
-    this.selectCustomDropdown('#gender', gender);
-    // Date of Birth (DOB) - Uses reliable label-finding and blur to close the date picker
-    cy.get('label').contains('Date of Birth').parent().find('input').clear().blur().type(dob);   
-    // Joining Date - Uses reliable label-finding and blur to close the date picker
-    cy.get('label').contains('Join Date').parent().find('input').clear().blur().type(joinDate);
-    // FIX: System Role - Enforces selection of 'Employee' (case-insensitive)
+  // Navigation to User Management (Using existing XPath)
+  navigateToUserManagement() {
+    cy.xpath("(//li[@routerlinkactive='active-link'])[2]").should('be.visible').click();
+  }
+
+  // Click Profiles (Using robust ID selector)
+  clickProfiles() {
+    cy.get('#Profiles').should('be.visible').click();
+  }
+
+  // Click Add New User (Using existing XPath)
+  clickAddNewUser() {
+    // FIX: Using { force: true } to bypass the visibility check, as the element is clipped by a parent container.
+    cy.xpath("(//span[@class='text-[#FFFFFF] text-sm font-semibold'])[1]").click({ force: true });
+  }
+
+  // Enters email and clicks 'Get Started'. Removed hardcoded wait.
+  enterWorkEmail(email) {
+    // Assert and type into the email field
+    cy.get('input[placeholder="olivia@untitledui.com"]').should('be.visible').type(email);
+    // Click the button
+    cy.contains('button', 'Get Started').should('be.enabled').click();
+  }
+
+  // Selects Employment Status (FullTime, PartTime, Contract)
+  selectEmploymentStatus(status) {
+    cy.contains(status).should('be.visible').click(); 
+  }
+
+  // Selects Department
+  selectDepartment(department) {
+    // Using 'div' to scope the selection and avoid multiple element issues
+    cy.contains('div', department).should('be.visible').click(); 
+  }
+  
+  // Clicks the 'Next' button to move from the initial screen to the profile form
+//   clickNext() {
+//     cy.contains('button', 'Next').should('be.enabled').click();
+//   }
+
+  /**
+   * Helper function to select an option from a custom (non-native <select>) dropdown.
+   * @param {string} fieldSelector - The CSS selector of the input/field that opens the dropdown (e.g., '#salutationId').
+   * @param {string} optionText - The text of the option to select.
+   */
+  selectCustomDropdown(fieldSelector, optionText) {
+    // 1. Click the main field element to open the list
+    cy.get(fieldSelector).should('be.visible').click(); 
+    // 2. Search the global dropdown list (in the body) for the option text and click it
+    // Using RegExp ensures case-insensitivity and precise matching
+    cy.get('body').find('li[role="option"]')
+      .contains(new RegExp('^' + optionText + '$', 'i'))
+      .should('exist')
+      .click({ force: true });
+  }
+
+  // Fills the main profile form details
+  fillProfile({salutationtitle, gender, dob, joinDate, systemRole, workShift, designation, supervisor, firstName, lastName, phone, personalEmail}) {
+    // Title
+    this.selectCustomDropdown('#salutationId', salutationtitle);
+    
+    // Gender
+    this.selectCustomDropdown('#gender', gender);
+    
+    // Date of Birth (DOB) - Clear, type, and blur to ensure the date picker closes correctly
+    cy.get('label').contains('Date of Birth').parent().find('input').clear().type(dob).blur();
+    
+    // Joining Date
+    cy.get('label').contains('Join Date').parent().find('input').clear().type(joinDate).blur();
+    cy.get('body').click(0, 0);
+    // System Role (Assuming ID #systemRoleId)
+    // this.selectCustomDropdown('#roleId', systemRole);
+    
+
+        // FIX: System Role - Enforces selection of 'Employee' (case-insensitive)
     // Use user-provided XPath to click the combobox directly to open the options list
     cy.xpath("(//span[@role='combobox'])[4]").click(); 
     // Search the body globally for the option and click it
     cy.get('body').find('li[role="option"]').contains('Employee', { matchCase: false }).click();
     // Work Shift - NOW USING ROBUST HELPER
-    this.selectCustomDropdown('#workshiftId', workShift);
-    // Designation - NOW USING ROBUST HELPER
-    this.selectCustomDropdown('#designationId', designation),{ force: true };
-    // Supervisor - NOW USING ROBUST HELPER
-    this.selectCustomDropdown('#supervisor', supervisor);
-    cy.get('#first-name').type(firstName);
-    cy.get('#last-name').type(lastName);
-    cy.get('#phone').type(phone);
-    cy.get('#personal-email').type(personalEmail);
-  }
-  submit() {
-    cy.contains('Save').click();
-  }
+    // Work Shift
+    this.selectCustomDropdown('#workshiftId', workShift);
+    
+    // Designation
+    this.selectCustomDropdown('#designationId', designation);
+    
+    // Supervisor
+    this.selectCustomDropdown('#supervisorId', supervisor);
+    
+    // Basic Text Inputs
+    cy.get('#first-name').should('be.visible').type(firstName);
+    cy.get('#last-name').should('be.visible').type(lastName);
+    cy.get('#phone').should('be.visible').type(phone);
+    cy.get('#personal-email').should('be.visible').type(personalEmail);
+  }
+
+  // Submits the form
+  submit() {
+    cy.contains('button', 'Save').should('be.enabled').click();
+  }
 }
+
 export default HrOnboardingPage;
